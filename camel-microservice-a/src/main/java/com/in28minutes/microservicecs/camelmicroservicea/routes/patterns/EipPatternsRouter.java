@@ -17,7 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.in28minutes.microservicecs.camelmicroservicea.CurrencyExchange;
-@Component
+//@Component
 public class EipPatternsRouter extends RouteBuilder{
 
 	@Autowired
@@ -28,6 +28,11 @@ public class EipPatternsRouter extends RouteBuilder{
 	
 	@Override
 	public void configure() throws Exception {
+		
+		getContext().setTracing(true);
+		
+		errorHandler(deadLetterChannel("activemq:dead-letter-queue"));
+		
 		//Pipeline
 		//Content Based Routing - choice()
 		//Multicast
@@ -68,8 +73,15 @@ public class EipPatternsRouter extends RouteBuilder{
 //		.transform().constant("My Message is Hardcoded")
 //		.routingSlip(simple(routingSlip));
 		
+		//Endpoint1
+		//Endpoint2
+		//Endpoint3
+
+		
+		
 		from("direct:endpoint1")
-		.to("log:directendpoint1");
+		.wireTap("log:wire-tap")
+		.to("{{endpoint-for-logging}}");
 		
 		from("direct:endpoint2")
 		.to("log:directendpoint2");
@@ -81,13 +93,11 @@ public class EipPatternsRouter extends RouteBuilder{
 		//Dynamic Routing
 		
 		//Step 1, Step 2, Step 3
-		from("timer:dynamicRouting?period=10000")
+		from("timer:dynamicRouting?period={{timePeriod}}")
 		.transform().constant("My Message is Hardcoded")
 		.dynamicRouter(method(dynamicRouterBean));
 		
-		//Endpoint1
-		//Endpoint2
-		//Endpoint3
+
 	}
 }
 
